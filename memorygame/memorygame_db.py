@@ -110,7 +110,7 @@ def display_game_data():
         print(f"Database error: {e}")
 
 def plot_progress():
-    try```python
+    try:
         c.execute("SELECT * FROM game_data")
         rows = c.fetchall()
         game_ids = [row[0] for row in rows]
