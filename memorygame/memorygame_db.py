@@ -82,7 +82,7 @@ def reset_game():
             cards.append({"value": CARD_VALUES.pop(), "rect": pygame.Rect(x, y, CARD_WIDTH, CARD_HEIGHT), "flipped": False, "matched": False})
     flipped_cards = []
     score = 0
-    start_time = time.time()
+    start_time = time.time()  # Reset the timer
     plot_progress()  # Plot progress at the start of every game
 
 def log_game_data(score, completion_time):
@@ -229,7 +229,7 @@ def game_loop():
         # Check if the game is over
         if all(card["matched"] for card in cards):
             completion_time = int(time.time() - start_time)
-            scores.append(score)  # Add current score tothe scores list
+            scores.append(score)  #```python
             times.append(completion_time)  # Add completion time to the times list
             log_game_data(score, completion_time)  # Log game data to the database
             show_popup_message("You Win!\nPress R to Replay\nQ to Quit\nD to Display Data\nP to Plot Progress")
