@@ -83,8 +83,7 @@ def reset_game():
     flipped_cards = []
     score = 0
     start_time = time.time()  # Reset the timer
-    plot_progress()  # Plot progress at the start of every game
-
+    
 def log_game_data(score, completion_time):
     try:
         print(f"Logging data: Score = {score}, Completion Time = {completion_time}")
@@ -107,7 +106,7 @@ def display_game_data():
         pygame.display.update()
         time.sleep(5)
     except sqlite3.Error as e:
-        print(f"Database error: {e}")
+       print(f"Database error: {e}")
 
 def plot_progress():
     try:
@@ -142,6 +141,9 @@ def plot_progress():
         plt.show()
     except sqlite3.Error as e:
         print(f"Database error: {e}")
+
+    # After plotting, show the popup message with options
+    show_popup_message("Press R to Replay\nQ to Quit\nD to Display Data\nP to Plot Progress")
 
 def show_popup_message(message):
     popup_width = 600
@@ -189,6 +191,7 @@ def main_menu():
 def game_loop():
     global running, score, start_time, flipped_cards
     running = True
+    game_completed = False
     while running:
         screen.fill(BLACK)
         elapsed_time = int(time.time() - start_time)
@@ -227,11 +230,12 @@ def game_loop():
             flipped_cards = []
 
         # Check if the game is over
-        if all(card["matched"] for card in cards):
+        if all(card["matched"] for card in cards) and not game_completed:
             completion_time = int(time.time() - start_time)
-            scores.append(score)  #```python
+            scores.append(score)
             times.append(completion_time)  # Add completion time to the times list
             log_game_data(score, completion_time)  # Log game data to the database
+            game_completed = True
             show_popup_message("You Win!\nPress R to Replay\nQ to Quit\nD to Display Data\nP to Plot Progress")
             waiting_for_input = True
             while waiting_for_input:
@@ -239,6 +243,7 @@ def game_loop():
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_r:
                             reset_game()
+                            game_completed = False
                             waiting_for_input = False
                         elif event.key == pygame.K_q:
                             running = False
@@ -249,10 +254,14 @@ def game_loop():
                             conn.commit()
                         elif event.key == pygame.K_d:
                             display_game_data()
+                            reset_game()
+                            game_completed = False
                             show_popup_message("Press R to Replay\nQ to Quit\nP to Plot Progress")
                             waiting_for_input = False
                         elif event.key == pygame.K_p:
                             plot_progress()
+                            reset_game()
+                            game_completed = False
                             show_popup_message("Press R to Replay\nQ to Quit\nD to Display Data")
                             waiting_for_input = False
 
