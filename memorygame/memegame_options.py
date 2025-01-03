@@ -106,7 +106,6 @@ def display_game_data():
         pygame.display.update()
         time.sleep(5)
     except sqlite3.Error as e:
-       ```python
         print(f"Database error: {e}")
 
 def plot_progress():
@@ -168,6 +167,7 @@ def main_menu():
     draw_text("Press 2 to Play Whack-a-Mole", WHITE, 200, 300)
     draw_text("Press 3 to Play Spot the Difference", WHITE, 200, 400)
     draw_text("Press 4 to Play Solve a Puzzle", WHITE, 200, 500)
+    draw_text("Press Q to Quit", WHITE, 200, 600)
     pygame.display.update()
     waiting_for_input = True
     while waiting_for_input:
@@ -192,6 +192,9 @@ def main_menu():
                 elif event.key == pygame.K_4:
                     waiting_for_input = False
                     solve_a_puzzle()
+                elif event.key == pygame.K_q:
+                    pygame.quit()
+                    exit()
 
 # Game loop for Memory Matching Game
 def game_loop():
@@ -220,12 +223,13 @@ def game_loop():
                 for card in cards:
                     if card["rect"].collidepoint(pos) and not card["flipped"] and not card["matched"]:
                         card["flipped"] = True
+                        card["flipped"] = True
                         flipped_cards.append(card)
                         break
 
         # Check for matches
         if len(flipped_cards) == 2:
-            pygame[0]["value"] == flipped_cards[1]["value"]:
+            if flipped_cards[0]["value"] == flipped_cards[1]["value"]:
                 flipped_cards[0]["matched"] = True
                 flipped_cards[1]["matched"] = True
                 score += 1
