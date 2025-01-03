@@ -1,113 +1,119 @@
-// Game Variables
 let cards = [];
 let flippedCards = [];
-let matchedCards = [];
 let score = 0;
-let startTime;
-let gameCompleted = false;
+let startTime = null;
+let gameInterval = null;
 
-// Initialize Game
-const gameBoard = document.getElementById("game-board");
-const scoreDisplay = document.getElementById("score");
-const timeDisplay = document.getElementById("time");
-const popupMessage = document.getElementById("popup-message");
-
-function initializeGame() {
-    cards = [];
-    flippedCards = [];
-    matchedCards = [];
-    score = 0;
-    startTime = Date.now();
-    gameCompleted = false;
-
-    // Create 4x4 grid of cards
-    const cardValues = [1, 2, 3, 4, 5, 6, 7, 8];
-    shuffleArray(cardValues);
-
-    gameBoard.innerHTML = ""; // Clear previous cards
-
-    for (let i = 0; i < 16; i++) {
-        const card = document.createElement("div");
-        card.classList.add("card");
-        card.dataset.value = cardValues[i];
-        card.dataset.index = i;
-
-        card.addEventListener("click", flipCard);
-        gameBoard.appendChild(card);
-    }
-    updateScore();
-    updateTime();
+// Initialize the card values and shuffle them
+function initializeCards() {
+    const cardValues = [1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8];
+    shuffle(cardValues);
+    cards = cardValues.map((value, index) => ({
+        value,
+        id: index,
+        flipped: false,
+        matched: false
+    }));
 }
 
-function flipCard(event) {
-    if (gameCompleted || flippedCards.length >= 2 || event.target.classList.contains("flipped")) return;
+// Shuffle an array using Fisher-Yates shuffle algorithm
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
 
-    const card = event.target;
-    card.classList.add("flipped");
-    card.innerText = card.dataset.value;
+// Create the card elements in the DOM
+function createCardElements() {
+    const gameGrid = document.getElementById('game-grid');
+    gameGrid.innerHTML = ''; // Clear the grid
+
+    cards.forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('card');
+        cardElement.setAttribute('data-id', card.id);
+        cardElement.addEventListener('click', flipCard);
+        gameGrid.appendChild(cardElement);
+    });
+}
+
+// Flip the card and check for matches
+function flipCard() {
+    if (flippedCards.length === 2) return;
+
+    const cardElement = this;
+    const cardId = cardElement.getAttribute('data-id');
+    const card = cards[cardId];
+
+    if (card.flipped || card.matched) return;
+
+    card.flipped = true;
+    cardElement.classList.add('flipped');
+    cardElement.textContent = card.value;
     flippedCards.push(card);
 
     if (flippedCards.length === 2) {
-        checkMatch();
+        checkForMatch();
     }
 }
 
-function checkMatch() {
+// Check if the flipped cards match
+function checkForMatch() {
     const [card1, card2] = flippedCards;
-    if (card1.dataset.value === card2.dataset.value) {
-        card1.classList.add("matched");
-        card2.classList.add("matched");
-        matchedCards.push(card1, card2);
-        score++;
-        if (matchedCards.length === 16) {
-            gameCompleted = true;
-            showPopup("You Win! Press R to Replay | Q to Quit");
-        }
+    const cardElements = document.querySelectorAll('.card');
+
+    if (card1.value === card2.value) {
+        card1.matched = true;
+        card2.matched = true;
+        updateScore();
     } else {
         setTimeout(() => {
-            card1.classList.remove("flipped");
-            card2.classList.remove("flipped");
+            card1.flipped = false;
+            card2.flipped = false;
+            cardElements[card1.id].classList.remove('flipped');
+            cardElements[card2.id].classList.remove('flipped');
+            cardElements[card1.id].textContent = '';
+            cardElements[card2.id].textContent = '';
         }, 1000);
     }
+
     flippedCards = [];
-    updateScore();
-}
 
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+    if (cards.every(card => card.matched)) {
+        endGame();
     }
 }
 
+// Update the score
 function updateScore() {
-    scoreDisplay.textContent = `Score: ${score}`;
+    score += 1;
+    document.getElementById('score').textContent = score;
 }
-
-function updateTime() {
-    if (!gameCompleted) {
-        const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-        timeDisplay.textContent = `Time: ${elapsedTime}s`;
-        requestAnimationFrame(updateTime);
-    }
-}
-
-function showPopup(message) {
-    popupMessage.querySelector("p").innerText = message;
-    popupMessage.style.display = "block";
-}
-
-// Event listeners for replay and quit
-document.addEventListener("keydown", (event) => {
-    if (gameCompleted) {
-        if (event.key === "r" || event.key === "R") {
-            popupMessage.style.display = "none";
-            initializeGame();
-        } else if (event.key === "q" || event.key === "Q") {
-            window.location.reload();
-        }
-    }
-});
 
 // Start the game
-initializeGame();
+function startGame() {
+    score = 0;
+    document.getElementById('score').textContent = score;
+    startTime = new Date();
+    initializeCards();
+    createCardElements();
+
+    if (gameInterval) clearInterval(gameInterval);
+    gameInterval = setInterval(updateTime, 1000);
+}
+
+// Update the game time
+function updateTime() {
+    const timeElapsed = Math.floor((new Date() - startTime) / 1000);
+    document.getElementById('time').textContent = timeElapsed;
+}
+
+// End the game
+function endGame() {
+    clearInterval(gameInterval);
+    alert(`Game Over! Your score: ${score}`);
+}
+
+// Initialize the game
+document.getElementById('start-button').addEventListener('click', startGame);
