@@ -33,9 +33,6 @@ font = pygame.font.SysFont('arial', 12)
 # Clock
 clock = pygame.time.Clock()
 
-# Set up the display
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Whack-a-Mole")
 # Load images
 MOLE_IMAGE_PATH = 'mole.png'  # Replace this with the path to your mole image file
 HAMMER_IMAGE_PATH = 'hammer.png'  # Replace this with the path to your hammer image file
@@ -330,6 +327,9 @@ def get_cell_from_mouse_pos(pos):
     row = y // (CELL_SIZE + GRID_SPACING)
     return row, col
 # Whack-a-Mole game
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Whack-a-Mole")
+
 def whack_a_mole():
     # Initialize variables
     mole_visible = False
