@@ -26,7 +26,7 @@ function initializeGame() {
 
     gameBoard.innerHTML = ""; // Clear previous cards
 
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 8; i++) {
         const card = document.createElement("div");
         card.classList.add("card");
         card.dataset.value = cardValues[i];
