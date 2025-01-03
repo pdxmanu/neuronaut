@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    .game-container {
+      display: grid;
+      grid-template-columns: repeat(4, 100px);
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .card {
+      width: 100px;
+      height: 100px;
+      background-color: #3e8e41;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      color: white;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+
+    .card.flipped {
+      background-color: #fff;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container" id="game-container"></div>
+
+  <script>
+    const gameContainer = document.getElementById("game-container");
+
+    const cardValues = ["A", "B", "C", "D", "E", "F", "G", "H"];
+    const shuffledCards = [...cardValues, ...cardValues].sort(() => Math.random() - 0.5);
+
+    let flippedCards = [];
+    let matchedCards = [];
+
+    function createCard(value) {
+      const card = document.createElement("div");
+      card.classList.add("card");
+      card.textContent = value;
+      card.addEventListener("click", flipCard);
+      return card;
+    }
+
+    function flipCard() {
+      if (flippedCards.length < 2 && !this.classList.contains("flipped")) {
+        this.classList.add("flipped");
+        flippedCards.push(this);
+
+        if (flippedCards.length === 2) {
+          checkMatch();
+        }
+      }
+    }
+
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+      if (card1.textContent === card2.textContent) {
+        matchedCards.push(card1, card2);
+        flippedCards = [];
+      } else {
+        setTimeout(() => {
+          card1.classList.remove("flipped");
+          card2.classList.remove("flipped");
+          flippedCards = [];
+        }, 1000);
+      }
+
+      if (matchedCards.length === shuffledCards.length) {
+        setTimeout(() => alert("You Win!"), 500);
+      }
+    }
+
+    shuffledCards.forEach(value => {
+      const card = createCard(value);
+      gameContainer.appendChild(card);
+    });
+  </script>
+</body>
+</html>
+
