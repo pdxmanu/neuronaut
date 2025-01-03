@@ -21,12 +21,12 @@ function initializeGame() {
     gameCompleted = false;
 
     // Create 4x4 grid of cards
-    const cardValues = [1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8];
+    const cardValues = [1, 2, 3, 4, 5, 6, 7, 8];
     shuffleArray(cardValues);
 
     gameBoard.innerHTML = ""; // Clear previous cards
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 16; i++) {
         const card = document.createElement("div");
         card.classList.add("card");
         card.dataset.value = cardValues[i];
