@@ -4,25 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memory Matching Game</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="gameContainer">
-        <h1>Memory Matching Game</h1>
+    <div id="game-container">
         <div id="scoreboard">
-            <p id="score">Score: 0</p>
-            <p id="timer">Time: 0s</p>
-            <p id="bestTime">Best Time: --</p>
+            <span id="score">Score: 0</span>
+            <span id="time">Time: 0s</span>
         </div>
-        <div id="gameGrid"></div>
-        <div id="popupMessage" class="hidden">
-            <p id="popupText"></p>
-            <button id="replayBtn">Replay</button>
-            <button id="quitBtn">Quit</button>
-            <button id="showDataBtn">Show Data</button>
-            <button id="plotProgressBtn">Plot Progress</button>
+        <div id="game-board" class="grid-container">
+            <!-- Cards will be dynamically added here -->
+        </div>
+        <div id="popup-message" class="hidden">
+            <div id="popup-content">
+                <p>Game Over! You Win!</p>
+                <p>Press R to Replay | Q to Quit</p>
+            </div>
         </div>
     </div>
-    <script src="scripts.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
