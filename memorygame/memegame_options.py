@@ -106,7 +106,8 @@ def display_game_data():
         pygame.display.update()
         time.sleep(5)
     except sqlite3.Error as e:
-        print(f"Database error:: {e}")
+       ```python
+        print(f"Database error: {e}")
 
 def plot_progress():
     try:
@@ -224,9 +225,7 @@ def game_loop():
 
         # Check for matches
         if len(flipped_cards) == 2:
-            pygame.time.delay(500)
-            if flipped_cards```python
-[0]["value"] == flipped_cards[1]["value"]:
+            pygame[0]["value"] == flipped_cards[1]["value"]:
                 flipped_cards[0]["matched"] = True
                 flipped_cards[1]["matched"] = True
                 score += 1
@@ -282,18 +281,54 @@ def game_loop():
 
 # Whack-a-Mole game
 def whack_a_mole():
-    # Implement the Whack-a-Mole game logic here
-    pass
+    running = True
+    while running:
+        screen.fill(BLACK)
+        draw_text("Whack-a-Mole Game", WHITE, 200, 200)
+        draw_text("Press M to return to Main Menu", WHITE, 200, 300)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_m:
+                    running = False
+                    main_menu()
 
 # Spot the Difference game
 def spot_the_difference():
-    # Implement the Spot the Difference game logic here
-    pass
+    running = True
+    while running:
+        screen.fill(BLACK)
+        draw_text("Spot the Difference Game", WHITE, 200, 200)
+        draw_text("Press M to return to Main Menu", WHITE, 200, 300)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_m:
+                    running = False
+                    main_menu()
 
 # Solve a Puzzle game
 def solve_a_puzzle():
-    # Implement the Solve a Puzzle game logic here
-    pass
+    running = True
+    while running:
+        screen.fill(BLACK)
+        draw_text("Solve a Puzzle Game", WHITE, 200, 200)
+        draw_text("Press M to return to Main Menu", WHITE, 200, 300)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_m:
+                    running = False
+                    main_menu()
 
 # Start the main menu and game loop
 while True:
