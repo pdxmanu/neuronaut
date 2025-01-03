@@ -1,4 +1,3 @@
-
 import pygame
 import random
 import time
@@ -12,7 +11,7 @@ pygame.init()
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-pygame.display.set_caption("Attention Games")
+pygame.display.set_caption("Cognitive Improvement Games")
 
 # Define colors
 WHITE = (255, 255, 255)
@@ -24,124 +23,181 @@ GRAY = (169, 169, 169)
 # Define fonts
 font = pygame.font.SysFont(None, 40)
 
+# Card settings for Memory Matching Game
+CARD_WIDTH = 100
+CARD_HEIGHT = 100
+GAP = 10
+
+# Card values (pairs of numbers for matching)
+CARD_VALUES = [1, 2, 3, 4, 5, 6, 7, 8] * 2
+random.shuffle(CARD_VALUES)
+
+# Create card positions
+cards = []
+for i in range(4):  # 4 rows
+    for j in range(4):  # 4 columns
+        x = j * (CARD_WIDTH + GAP) + GAP
+        y = i * (CARD_HEIGHT + GAP) + GAP + 100
+        cards.append({"value": CARD_VALUES.pop(), "rect": pygame.Rect(x, y, CARD_WIDTH, CARD_HEIGHT), "flipped": False, "matched": False})
+
+# Initialize game variables
+flipped_cards = []
+score = 0
+start_time = time.time()
+scores = []  # List to track all scores
+times = []   # List to track all completion times
+
 # Database setup
-conn = sqlite3.connect('attention_games.db')
+conn = sqlite3.connect('memory_game.db')
 c = conn.cursor()
+
+# Create the table with the correct schema
 c.execute('''CREATE TABLE IF NOT EXISTS game_data
-             (id INTEGER PRIMARY KEY AUTOINCREMENT, game_type TEXT, score INTEGER, completion_time INTEGER)''')
+             (id INTEGER PRIMARY KEY AUTOINCREMENT, score INTEGER, completion_time INTEGER)''')
 conn.commit()
 
-# Helper Functions
-def draw_text(text, color, x, y, center=False):
+# Helper functions
+def draw_text(text, color, x, y):
     message = font.render(text, True, color)
-    if center:
-        text_rect = message.get_rect(center=(x, y))
-        screen.blit(message, text_rect.topleft)
-    else:
-        screen.blit(message, (x, y))
+    screen.blit(message, (x, y))
 
-def log_game_data(game_type, score, completion_time):
-    c.execute("INSERT INTO game_data (game_type, score, completion_time) VALUES (?, ?, ?)", 
-              (game_type, score, completion_time))
-    conn.commit()
+def draw_cards():
+    for card in cards:
+        if card["flipped"] or card["matched"]:
+            pygame.draw.rect(screen, WHITE, card["rect"])
+            value_text = font.render(str(card["value"]), True, BLACK)
+            screen.blit(value_text, (card["rect"].x + CARD_WIDTH // 4, card["rect"].y + CARD_HEIGHT // 4))
+        else:
+            pygame.draw.rect(screen, GREEN, card["rect"])
 
-def display_game_data(game_type=None):
-    screen.fill(BLACK)
-    if game_type:
-        c.execute("SELECT * FROM game_data WHERE game_type = ?", (game_type,))
-    else:
+def reset_game():
+    global cards, flipped_cards, score, start_time
+    CARD_VALUES.extend([1, 2, 3, 4, 5, 6, 7, 8] * 2)
+    random.shuffle(CARD_VALUES)
+    cards = []
+    for i in range(4):
+        for j in range(4):
+            x = j * (CARD_WIDTH + GAP) + GAP
+            y = i * (CARD_HEIGHT + GAP) + GAP + 100
+            cards.append({"value": CARD_VALUES.pop(), "rect": pygame.Rect(x, y, CARD_WIDTH, CARD_HEIGHT), "flipped": False, "matched": False})
+    flipped_cards = []
+    score = 0
+    start_time = time.time()  # Reset the timer
+    
+def log_game_data(score, completion_time):
+    try:
+        print(f"Logging data: Score = {score}, Completion Time = {completion_time}")
+        print(f"Data types: Score = {type(score)}, Completion Time = {type(completion_time)}")
+        print(f"Inserting into database: (score: {score}, completion_time: {completion_time})")
+        c.execute("INSERT INTO game_data (score, completion_time) VALUES (?, ?)", (score, completion_time))
+        conn.commit()
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+
+def display_game_data():
+    try:
         c.execute("SELECT * FROM game_data")
-    rows = c.fetchall()
-    y = 50
-    for row in rows:
-        draw_text(f"Game {row[0]}: {row[1]} - Score: {row[2]}, Time: {row[3]}s", WHITE, 50, y)
-        y += 40
+        rows = c.fetchall()
+        screen.fill(BLACK)
+        y = 50
+        for row in rows:
+            draw_text(f"Game {row[0]}: Score = {row[1]}, Time = {row[2]}s", WHITE, 50, y)
+            y += 40
+        pygame.display.update()
+        time.sleep(5)
+    except sqlite3.Error as: e:
+        print(f"Database error: {e}")
+
+def plot_progress():
+    try:
+        c.execute("SELECT * FROM game_data")
+        rows = c.fetchall()
+        game_ids = [row[0] for row in rows]
+        times = [row[2] for row in rows]
+
+        # Debug prints
+        print("Fetched game data:", rows)
+        print("Game IDs:", game_ids)
+        print("Completion Times:", times)
+
+        scores = [row[1] for row in rows]
+
+        plt.figure(figsize=(10, 6))
+
+        # Plot times
+        plt.plot(game_ids, times, marker='o', linestyle='-', color='r', label='Completion Time (s)')
+        
+        # Plot scores
+        plt.plot(game_ids, scores, marker='x', linestyle='--', color='b', label='Score')
+
+        # Adjust axes dynamically
+        plt.title('Game Progress Over Time')
+        plt.xlabel('Game ID')
+        plt.ylabel('Performance Metrics')
+        plt.xticks(game_ids)  # Ensure all game IDs are shown
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+
+    # After plotting, show the popup message with options
+    show_popup_message("Press R to Replay\nQ to Quit\nD to Display Data\nP to Plot Progress")
+
+def show_popup_message(message):
+    popup_width = 600
+    popup_height = 200
+    popup_x = (WINDOW_WIDTH - popup_width) // 2
+    popup_y = (WINDOW_HEIGHT - popup_height) // 2
+    popup_rect = pygame.Rect(popup_x, popup_y, popup_width, popup_height)
+    
+    pygame.draw.rect(screen, GRAY, popup_rect)
+    message_lines = message.split('\n')
+    for i, line in enumerate(message_lines):
+        text_surface = font.render(line, True, RED)
+        text_rect = text_surface.get_rect(center=(popup_x + popup_width // 2, popup_y + 50 + i * 40))
+        screen.blit(text_surface, text_rect)
     pygame.display.update()
-    time.sleep(5)
 
-def plot_progress(game_type):
-    c.execute("SELECT * FROM game_data WHERE game_type = ?", (game_type,))
-    rows = c.fetchall()
-    game_ids = [row[0] for row in rows]
-    scores = [row[2] for row in rows]
-    times = [row[3] for row in rows]
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(game_ids, scores, marker='o', linestyle='-', label='Score', color='blue')
-    plt.plot(game_ids, times, marker='x', linestyle='--', label='Completion Time (s)', color='red')
-    plt.title(f'Progress for {game_type}')
-    plt.xlabel('Game ID')
-    plt.ylabel('Performance Metrics')
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-# Main Menu
+# Main menu
 def main_menu():
     screen.fill(BLACK)
-    draw_text("Select a Game:", WHITE, 400, 100, center=True)
-    draw_text("1. Memory Game", GREEN, 300, 200)
-    draw_text("2. Spot the Difference", GREEN, 300, 250)
-    draw_text("3. Whack-a-Mole", GREEN, 300, 300)
-    draw_text("4. Puzzle Game", GREEN, 300, 350)
-    draw_text("Press Q to Quit", RED, 300, 400)
+    draw_text("Press 1 to Play Memory Game", WHITE, 200, 200)
+    draw_text("Press 2 to Play Whack-a-Mole", WHITE, 200, 300)
+    draw_text("Press 3 to Play Spot the Difference", WHITE, 200, 400)
+    draw_text("Press 4 to Play Solve a Puzzle", WHITE, 200, 500)
     pygame.display.update()
-    
-    # Wait for the user to select a game or quit
-    selected_game = None
-    while selected_game is None:
+    waiting_for_input = True
+    while waiting_for_input:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                conn.close()
                 exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    selected_game = "memory"
+                    # Clear the database at the beginning of the game to start fresh
+                    c.execute("DELETE FROM game_data")
+                    c.execute("DELETE FROM sqlite_sequence WHERE name='game_data'")
+                    conn.commit()
+                    waiting_for_input = False
+                    game_loop()
                 elif event.key == pygame.K_2:
-                    selected_game = "spot_difference"
+                    waiting_for_input = False
+                    whack_a_mole()
                 elif event.key == pygame.K_3:
-                    selected_game = "whack_a_mole"
+                    waiting_for_input = False
+                    spot_the_difference()
                 elif event.key == pygame.K_4:
-                    selected_game = "puzzle"
-                elif event.key == pygame.K_q:
-                    pygame.quit()
-                    conn.close()
-                    exit()
-    
-    return selected_game
+                    waiting_for_input = False
+                    solve_a_puzzle()
 
-# Memory Game Setup (new function)
-def setup_memory_game():
-    """Sets up the memory game by creating a shuffled set of cards."""
-    values = ["A", "B", "C", "D", "E", "F", "G", "H", "A", "B", "C", "D", "E", "F", "G", "H"]
-    random.shuffle(values)
-    
-    cards = []
-    card_width = 100
-    card_height = 100
-    margin = 20
-    rows = 4
-    cols = 4
-    for row in range(rows):
-        for col in range(cols):
-            x = col * (card_width + margin) + 100
-            y = row * (card_height + margin) + 100
-            value = values.pop()
-            card = {"rect": pygame.Rect(x, y, card_width, card_height), "value": value, "flipped": False, "matched": False}
-            cards.append(card)
-    
-    return cards
-
-# Memory Game Logic
-def memory_game():
-    score = 0
-    start_time = time.time()
+# Game loop for Memory Matching Game
+def game_loop():
+    global running, score, start_time, flipped_cards
+    running = True
     game_completed = False
-    flipped_cards = []
-    cards = setup_memory_game()  # Set up the memory game cards
-    
-    while not game_completed:
+    while running:
         screen.fill(BLACK)
         elapsed_time = int(time.time() - start_time)
 
@@ -149,20 +205,15 @@ def memory_game():
         right_x = WINDOW_WIDTH - 200
         draw_text(f"Score: {score}", WHITE, right_x, 10)
         draw_text(f"Time: {elapsed_time}s", WHITE, right_x, 50)
+        if times:
+            draw_text(f"Best Time: {min(times)}s", WHITE, right_x, 90)
 
         # Draw cards
-        for card in cards:
-            if card["flipped"] or card["matched"]:
-                pygame.draw.rect(screen, WHITE, card["rect"])
-                draw_text(card["value"], BLACK, card["rect"].centerx, card["rect"].centery, center=True)
-            else:
-                pygame.draw.rect(screen, GRAY, card["rect"])
-        
+        draw_cards()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                conn.close()
-                exit()
+                running = False
             if event.type == pygame.MOUSEBUTTONDOWN and len(flipped_cards) < 2:
                 pos = pygame.mouse.get_pos()
                 for card in cards:
@@ -184,186 +235,61 @@ def memory_game():
             flipped_cards = []
 
         # Check if the game is over
-        if all(card["matched"] for card in cards):
+        if all(card["matched"] for card in cards) and not game_completed:
             completion_time = int(time.time() - start_time)
-            log_game_data("memory", score, completion_time)  # Log game data to the database
+            scores.append(score)
+            times.append(completion_time)  # Add completion time to the times list
+            log_game_data(score, completion_time)  # Log game data to the database
             game_completed = True
-            display_game_data("memory")
+            show_popup_message("You Win!\nPress R to Replay\nQ to Quit\nD to Display Data\nP to Plot Progress")
+            waiting_for_input = True
+            while waiting_for_input:
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_r:
+                            reset_game()
+                            game_completed = False
+                            waiting_for_input = False
+                        elif event.key == pygame.K_q:
+                            running = False
+                            waiting_for_input = False
+                            # Clear the database and reset the primary key when quitting
+                            c.execute("DELETE FROM game_data")
+                            c.execute("DELETE FROM sqlite_sequence WHERE name='game_data'")
+                            conn.commit()
+                        elif event.key == pygame.K_d:
+                            display_game_data()
+                            reset_game()
+                            game_completed = False
+                            show_popup_message("Press R to Replay\nQ to Quit\nP to Plot Progress")
+                            waiting_for_input = False
+                        elif event.key == pygame.K_p:
+                            plot_progress()
+                            reset_game()
+                            game_completed = False
+                            show_popup_message("Press R to Replay\nQ to Quit\nD to Display Data")
+                            waiting_for_input = False
 
-# Spot the Difference Game
-def spot_the_difference_game():
-    # Load two images to compare
-    img1 = pygame.image.load('image1.png')
-    img2 = pygame.image.load('image2.png')
-    img_rect = img1.get_rect(center=(WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2))
+        pygame.display.update()
 
-    differences = [(100, 100), (150, 150), (200, 200)]  # Example coordinates of differences
-    found_differences = []
-    
-    # Game loop
-    score = 0
-    start_time = time.time()
-    game_completed = False
+    pygame.quit()
+    conn.close()
 
-    while not game_completed:
-        screen.fill(BLACK)
-        elapsed_time = int(time.time() - start_time)
+# Whack-a-Mole game
+def whack_a_mole():
+    # Implement the Whack-a-Mole game logic here
+    pass
 
-        # Display images
-        screen.blit(img1, img_rect)
-        for diff in differences:
-            if diff in found_differences:
-                pygame.draw.circle(screen, GREEN, diff, 10)
-            else:
-                pygame.draw.circle(screen, RED, diff, 10)
-        
-        # Display Score and Time
-        right_x = WINDOW_WIDTH - 200
-        draw_text(f"Score: {score}", WHITE, right_x, 10)
-        draw_text(f"Time: {elapsed_time}s", WHITE, right_x, 50)
+# Spot the Difference game
+def spot_the_difference():
+    # Implement the Spot the Difference game logic here
+    pass
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                conn.close()
-                exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                for diff in differences:
-                    if pygame.Rect(diff[0] - 10, diff[1] - 10, 20, 20).collidepoint(pos) and diff not in found_differences:
-                        found_differences.append(diff)
-                        score += 1
-                        break
+# Solve a Puzzle game
+def solve_a_puzzle():
+    # Implement the Solve a Puzzle game logic here
+    pass
 
-        # Check if all differences are found
-        if len(found_differences) == len(differences):
-            completion_time = int(time.time() - start_time)
-            log_game_data("spot_difference", score, completion_time)  # Log game data to the database
-            game_completed = True
-            display_game_data("spot_difference")
-
-# Whack-a-Mole Game
-def whack_a_mole_game():
-    mole_radius = 40
-    num_holes = 9  # 3x3 grid
-    mole_positions = [(100, 100), (300, 100), (500, 100),
-                      (100, 300), (300, 300), (500, 300),
-                      (100, 500), (300, 500), (500, 500)]
-    mole = None
-    score = 0
-    start_time = time.time()
-    game_completed = False
-
-    while not game_completed:
-        screen.fill(BLACK)
-        elapsed_time = int(time.time() - start_time)
-
-        # Randomly show a mole
-        if mole is None or random.random() < 0.05:  # Mole appears at random intervals
-            mole = random.choice(mole_positions)
-        
-        # Draw holes
-        for pos in mole_positions:
-            pygame.draw.circle(screen, GRAY, pos, mole_radius)
-        
-        # Draw mole
-        if mole:
-            pygame.draw.circle(screen, GREEN, mole, mole_radius)
-        
-        # Display Score and Time
-        right_x = WINDOW_WIDTH - 200
-        draw_text(f"Score: {score}", WHITE, right_x, 10)
-        draw_text(f"Time: {elapsed_time}s", WHITE, right_x, 50)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                conn.close()
-                exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                if mole and pygame.Rect(mole[0] - mole_radius, mole[1] - mole_radius, 2 * mole_radius, 2 * mole_radius).collidepoint(pos):
-                    score += 1
-                    mole = None  # Mole disappears after being hit
-
-        # Check if the game is over (for example, after a certain time limit)
-        if elapsed_time > 60:  # End after 60 seconds
-            completion_time = int(time.time() - start_time)
-            log_game_data("whack_a_mole", score, completion_time)  # Log game data to the database
-            game_completed = True
-            display_game_data("whack_a_mole")
-
-# Puzzle Game
-def puzzle_game():
-    # Example: Sliding puzzle with a 3x3 grid (8-puzzle)
-    puzzle = list(range(9))  # Numbers from 0 to 8
-    random.shuffle(puzzle)
-    grid_size = 3
-    tile_size = 100
-    empty_tile = puzzle.index(0)  # The empty space in the puzzle
-
-    # Function to swap tiles
-    def swap_tiles(puzzle, idx1, idx2):
-        puzzle[idx1], puzzle[idx2] = puzzle[idx2], puzzle[idx1]
-
-    # Function to draw the puzzle grid
-    def draw_puzzle(puzzle):
-        for i in range(9):
-            x = (i % grid_size) * tile_size
-            y = (i // grid_size) * tile_size
-            if puzzle[i] != 0:
-                draw_text(str(puzzle[i]), WHITE, x + tile_size // 2, y + tile_size // 2, center=True)
-            pygame.draw.rect(screen, WHITE, pygame.Rect(x, y, tile_size, tile_size), 2)
-    
-    # Game loop
-    score = 0
-    start_time = time.time()
-    game_completed = False
-
-    while not game_completed:
-        screen.fill(BLACK)
-        elapsed_time = int(time.time() - start_time)
-
-        # Draw the puzzle
-        draw_puzzle(puzzle)
-
-        # Display Score and Time
-        right_x = WINDOW_WIDTH - 200
-        draw_text(f"Score: {score}", WHITE, right_x, 10)
-        draw_text(f"Time: {elapsed_time}s", WHITE, right_x, 50)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                conn.close()
-                exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                row = pos[1] // tile_size
-                col = pos[0] // tile_size
-                clicked_tile = row * grid_size + col
-
-                # Check if a tile can be swapped with the empty space
-                if (clicked_tile == empty_tile - 1 and col > 0) or (clicked_tile == empty_tile + 1 and col < grid_size - 1) or \
-                   (clicked_tile == empty_tile - grid_size and row > 0) or (clicked_tile == empty_tile + grid_size and row < grid_size - 1):
-                    swap_tiles(puzzle, clicked_tile, empty_tile)
-                    empty_tile = clicked_tile
-
-        # Check if the puzzle is solved
-        if puzzle == list(range(9)):
-            completion_time = int(time.time() - start_time)
-            log_game_data("puzzle", score, completion_time)  # Log game data to the database
-            game_completed = True
-            display_game_data("puzzle")
-
-# Game Loop
+# Start the main menu and game loop
 while True:
-    game_type = main_menu()
-    if game_type == "memory":
-        memory_game()
-    elif game_type == "spot_difference":
-        spot_the_difference_game()
-    elif game_type == "whack_a_mole":
-        whack_a_mole_game()
-    elif game_type == "puzzle":
-        puzzle_game()
+    main_menu()
