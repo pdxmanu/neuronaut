@@ -3,179 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memory Game</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f4f4f4;
-        }
-
-        .game-container {
-            display: grid;
-            grid-template-columns: repeat(4, 100px);
-            gap: 10px;
-            justify-items: center;
-            margin-top: 20px;
-        }
-
-        .card {
-            width: 100px;
-            height: 100px;
-            background-color: #3e8e41;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            color: white;
-            cursor: pointer;
-            border-radius: 10px;
-            transition: transform 0.3s;
-        }
-
-        .card.flipped {
-            background-color: #fff;
-            color: #000;
-        }
-
-        .card.matched {
-            background-color: #4CAF50;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .score, .timer {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .game-over {
-            font-size: 24px;
-            font-weight: bold;
-            color: red;
-            display: none;
-        }
-
-    </style>
+    <title>Memory Matching Game</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Memory Game</h1>
-    <div class="header">
-        <div class="score">Score: <span id="score">0</span></div>
-        <div class="timer">Time: <span id="time">00:00</span></div>
+    <div id="gameContainer">
+        <h1>Memory Matching Game</h1>
+        <div id="scoreboard">
+            <p id="score">Score: 0</p>
+            <p id="timer">Time: 0s</p>
+            <p id="bestTime">Best Time: --</p>
+        </div>
+        <div id="gameGrid"></div>
+        <div id="popupMessage" class="hidden">
+            <p id="popupText"></p>
+            <button id="replayBtn">Replay</button>
+            <button id="quitBtn">Quit</button>
+            <button id="showDataBtn">Show Data</button>
+            <button id="plotProgressBtn">Plot Progress</button>
+        </div>
     </div>
-
-    <div class="game-container" id="game-container"></div>
-
-    <div class="game-over" id="game-over">You Win! Time Taken: <span id="final-time"></span></div>
-
-    <script>
-        const gameContainer = document.getElementById("game-container");
-        const scoreElement = document.getElementById("score");
-        const timeElement = document.getElementById("time");
-        const gameOverElement = document.getElementById("game-over");
-        const finalTimeElement = document.getElementById("final-time");
-
-        let cardValues = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
-        let shuffledCards = [...cardValues, ...cardValues].sort(() => Math.random() - 0.5);
-
-        let flippedCards = [];
-        let matchedCards = [];
-        let score = 0;
-        let startTime = Date.now();
-        let timerInterval;
-
-        // Create a card element
-        function createCard(value) {
-            const card = document.createElement("div");
-            card.classList.add("card");
-            card.dataset.value = value;
-            card.textContent = "?" // Initially display "?" for hidden state
-            card.addEventListener("click", flipCard);
-            return card;
-        }
-
-        // Flip a card
-        function flipCard() {
-            if (flippedCards.length < 2 && !this.classList.contains("flipped")) {
-                this.classList.add("flipped");
-                this.textContent = this.dataset.value;
-                flippedCards.push(this);
-
-                if (flippedCards.length === 2) {
-                    checkMatch();
-                }
-            }
-        }
-
-        // Check if two flipped cards match
-        function checkMatch() {
-            const [card1, card2] = flippedCards;
-
-            if (card1.dataset.value === card2.dataset.value) {
-                matchedCards.push(card1, card2);
-                score++;
-                scoreElement.textContent = "Score: " + score;
-                flippedCards = [];
-
-                // Mark cards as matched
-                card1.classList.add("matched");
-                card2.classList.add("matched");
-
-                // Check if all cards are matched
-                if (matchedCards.length === shuffledCards.length) {
-                    stopTimer();
-                    gameOverElement.style.display = "block";
-                    finalTimeElement.textContent = formatTime(Date.now() - startTime);
-                }
-            } else {
-                setTimeout(() => {
-                    card1.classList.remove("flipped");
-                    card2.classList.remove("flipped");
-                    card1.textContent = "?";
-                    card2.textContent = "?";
-                    flippedCards = [];
-                }, 1000);
-            }
-        }
-
-        // Timer function to track time
-        function startTimer() {
-            timerInterval = setInterval(() => {
-                const elapsedTime = Date.now() - startTime;
-                timeElement.textContent = formatTime(elapsedTime);
-            }, 1000);
-        }
-
-        function stopTimer() {
-            clearInterval(timerInterval);
-        }
-
-        function formatTime(ms) {
-            const date = new Date(ms);
-            return date.toISOString().substr(14, 5); // format as MM:SS
-        }
-
-        // Initialize the game
-        function initGame() {
-            shuffledCards.forEach(value => {
-                const card = createCard(value);
-                gameContainer.appendChild(card);
-            });
-            startTimer();
-        }
-
-        initGame();
-    </script>
+    <script src="scripts.js"></script>
 </body>
 </html>
-
