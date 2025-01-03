@@ -1,66 +1,79 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #000;
-    color: white;
-    text-align: center;
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
-#gameContainer {
-    width: 80%;
-    margin: 0 auto;
-    padding: 20px;
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1e1e1e;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-h1 {
-    margin-bottom: 20px;
+#game-container {
+    text-align: center;
 }
 
 #scoreboard {
-    display: flex;
-    justify-content: space-around;
+    font-size: 20px;
     margin-bottom: 20px;
 }
 
-#gameGrid {
+.grid-container {
     display: grid;
-    grid-template-columns: repeat(4, 100px);
-    grid-gap: 10px;
-    justify-content: center;
+    grid-template-columns: repeat(4, 120px);
+    grid-template-rows: repeat(4, 120px);
+    gap: 10px;
+    margin: 0 auto;
 }
 
 .card {
     width: 100px;
     height: 100px;
-    background-color: green;
+    background-color: #2e8b57;
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 30px;
+    color: black;
+    border-radius: 10px;
     cursor: pointer;
 }
 
-.card.flipped, .card.matched {
+.card.flipped,
+.card.matched {
     background-color: white;
-    color: black;
+}
+
+.card.matched {
+    background-color: green;
+}
+
+#popup-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 30px;
+    border-radius: 10px;
+    color: white;
+    font-size: 20px;
+    text-align: center;
+    display: none;
+}
+
+#popup-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .hidden {
     display: none;
-}
-
-button {
-    background-color: #008CBA;
-    border: none;
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    font-size: 16px;
-    margin: 5px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #006F8E;
 }
