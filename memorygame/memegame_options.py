@@ -105,8 +105,8 @@ def display_game_data():
             y += 40
         pygame.display.update()
         time.sleep(5)
-    except sqlite3.Error as: e:
-        print(f"Database error: {e}")
+    except sqlite3.Error as e:
+        print(f"Database error:: {e}")
 
 def plot_progress():
     try:
@@ -225,7 +225,8 @@ def game_loop():
         # Check for matches
         if len(flipped_cards) == 2:
             pygame.time.delay(500)
-            if flipped_cards[0]["value"] == flipped_cards[1]["value"]:
+            if flipped_cards```python
+[0]["value"] == flipped_cards[1]["value"]:
                 flipped_cards[0]["matched"] = True
                 flipped_cards[1]["matched"] = True
                 score += 1
@@ -241,7 +242,7 @@ def game_loop():
             times.append(completion_time)  # Add completion time to the times list
             log_game_data(score, completion_time)  # Log game data to the database
             game_completed = True
-            show_popup_message("You Win!\nPress R to Replay\nQ to Quit\nD to Display Data\nP to Plot Progress")
+            show_popup_message("You Win!\nPress R to Replay\nQ to Quit\nD to Display Data\nP to Plot Progress\nM to Main Menu")
             waiting_for_input = True
             while waiting_for_input:
                 for event in pygame.event.get():
@@ -261,14 +262,18 @@ def game_loop():
                             display_game_data()
                             reset_game()
                             game_completed = False
-                            show_popup_message("Press R to Replay\nQ to Quit\nP to Plot Progress")
+                            show_popup_message("Press R to Replay\nQ to Quit\nP to Plot Progress\nM to Main Menu")
                             waiting_for_input = False
                         elif event.key == pygame.K_p:
                             plot_progress()
                             reset_game()
                             game_completed = False
-                            show_popup_message("Press R to Replay\nQ to Quit\nD to Display Data")
+                            show_popup_message("Press R to Replay\nQ to Quit\nD to Display Data\nM to Main Menu")
                             waiting_for_input = False
+                        elif event.key == pygame.K_m:
+                            running = False
+                            waiting_for_input = False
+                            main_menu()
 
         pygame.display.update()
 
